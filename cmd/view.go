@@ -131,68 +131,49 @@ func viewEntriesGroupedByDay(from, to string) error {
 		dayName := t.Format("Monday, Jan 2")
 
 		fmt.Printf("\n%s\n", dayName)
-		fmt.Println("─────────────────────────────────────────────────────────────────────────────────")
-		fmt.Printf("%-25s %-20s %-10s %s\n", "PROJECT", "TASK", "HOURS", "NOTES")
-		fmt.Println("─────────────────────────────────────────────────────────────────────────────────")
+		fmt.Println("────────────────────────────────────────────────────────────────────────────────")
 
 		var dayTotal float64
 		for _, e := range dayEntries {
-			notes := e.Notes
-			if len(notes) > 30 {
-				notes = notes[:27] + "..."
-			}
-
 			hoursStr := fmt.Sprintf("%.2f", e.Hours)
 			if e.IsRunning {
 				hoursStr += "*"
 			}
 
-			fmt.Printf("%-25s %-20s %-10s %s\n",
-				truncate(e.Project.Name, 25),
-				truncate(e.Task.Name, 20),
-				hoursStr,
-				notes,
-			)
+			fmt.Printf("  %s hrs  %s / %s\n", hoursStr, e.Project.Name, e.Task.Name)
+			if e.Notes != "" {
+				fmt.Printf("           %s\n", e.Notes)
+			}
 			dayTotal += e.Hours
 		}
 
-		fmt.Printf("                                              Day: %.2f hrs\n", dayTotal)
+		fmt.Printf("                                                            Day total: %.2f hrs\n", dayTotal)
 		weekTotal += dayTotal
 	}
 
-	fmt.Println("\n═══════════════════════════════════════════════════════════════════════════════════")
-	fmt.Printf("                                            Week: %.2f hrs\n", weekTotal)
+	fmt.Println("────────────────────────────────────────────────────────────────────────────────")
+	fmt.Printf("                                                           Week total: %.2f hrs\n", weekTotal)
 
 	return nil
 }
 
 func renderEntriesTable(entries []models.TimeEntry) {
 	fmt.Println()
-	fmt.Printf("%-12s %-25s %-20s %-10s %s\n", "DATE", "PROJECT", "TASK", "HOURS", "NOTES")
-	fmt.Println("─────────────────────────────────────────────────────────────────────────────────────────")
 
 	var total float64
 	for _, e := range entries {
-		notes := e.Notes
-		if len(notes) > 25 {
-			notes = notes[:22] + "..."
-		}
-
 		hoursStr := fmt.Sprintf("%.2f", e.Hours)
 		if e.IsRunning {
 			hoursStr += "*"
 		}
 
-		fmt.Printf("%-12s %-25s %-20s %-10s %s\n",
-			e.SpentDate,
-			truncate(e.Project.Name, 25),
-			truncate(e.Task.Name, 20),
-			hoursStr,
-			notes,
-		)
+		fmt.Printf("%s  %s hrs  %s / %s\n", e.SpentDate, hoursStr, e.Project.Name, e.Task.Name)
+		if e.Notes != "" {
+			fmt.Printf("                  %s\n", e.Notes)
+		}
 		total += e.Hours
 	}
 
-	fmt.Println("─────────────────────────────────────────────────────────────────────────────────────────")
+	fmt.Println("────────────────────────────────────────────────────────────────────────────────")
 	fmt.Printf("Total: %.2f hours (%d entries)\n", total, len(entries))
 }

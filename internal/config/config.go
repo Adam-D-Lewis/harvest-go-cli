@@ -37,7 +37,15 @@ func Load() (*Config, error) {
 }
 
 func loadEnvFile() error {
-	// Try current directory first
+	// Try ~/.config/harvest/.env first (for tmux/global access)
+	if home, err := os.UserHomeDir(); err == nil {
+		configPath := filepath.Join(home, ".config", "harvest", ".env")
+		if _, err := os.Stat(configPath); err == nil {
+			return godotenv.Load(configPath)
+		}
+	}
+
+	// Try current directory
 	if err := godotenv.Load(); err == nil {
 		return nil
 	}
