@@ -62,8 +62,8 @@ func runStatus(cmd *cobra.Command, args []string) error {
 			pctWithTimer = 100
 		}
 
-		// Format: "▶ ProjectName 1h23m | 25.5h/36h (71%)"
-		fmt.Printf("▶ %s %s | %.1fh/%.0fh (%.0f%%)\n",
+		// Format: "> ProjectName 1h23m | 25.5h/36h (71%)"
+		fmt.Printf("> %s %s | %.1fh/%.0fh (%.0f%%)\n",
 			state.Project,
 			formatDuration(elapsed),
 			totalWithTimer,
@@ -71,8 +71,8 @@ func runStatus(cmd *cobra.Command, args []string) error {
 			pctWithTimer,
 		)
 	} else {
-		// Format: "⏸ 25.5h/36h (71%)"
-		fmt.Printf("⏸ %.1fh/%.0fh (%.0f%%)\n",
+		// Format: "25.5h/36h (71%)"
+		fmt.Printf("%.1fh/%.0fh (%.0f%%)\n",
 			weekTotal,
 			weeklyTargetHours,
 			pct,

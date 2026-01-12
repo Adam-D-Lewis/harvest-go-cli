@@ -18,9 +18,9 @@ func SelectProject(projects []models.ProjectAssignment) (*models.ProjectAssignme
 
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}",
-		Active:   "\U0001F449 {{ .Project.Name | cyan }} ({{ .Client.Name | faint }})",
-		Inactive: "   {{ .Project.Name }} ({{ .Client.Name | faint }})",
-		Selected: "\U00002705 {{ .Project.Name | green }}",
+		Active:   "> {{ .Project.Name | cyan }} ({{ .Client.Name | faint }})",
+		Inactive: "  {{ .Project.Name }} ({{ .Client.Name | faint }})",
+		Selected: "* {{ .Project.Name | green }}",
 	}
 
 	searcher := func(input string, index int) bool {
@@ -65,9 +65,9 @@ func SelectTask(tasks []models.TaskAssignment) (*models.TaskAssignment, error) {
 
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}",
-		Active:   "\U0001F449 {{ .Task.Name | cyan }}",
-		Inactive: "   {{ .Task.Name }}",
-		Selected: "\U00002705 {{ .Task.Name | green }}",
+		Active:   "> {{ .Task.Name | cyan }}",
+		Inactive: "  {{ .Task.Name }}",
+		Selected: "* {{ .Task.Name | green }}",
 	}
 
 	searcher := func(input string, index int) bool {

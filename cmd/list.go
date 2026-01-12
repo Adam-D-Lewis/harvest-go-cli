@@ -7,9 +7,10 @@ import (
 )
 
 var listCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List projects and tasks",
-	Long:  `List your assigned projects and their tasks.`,
+	Use:     "list",
+	Aliases: []string{"ls"},
+	Short:   "List projects and tasks",
+	Long:    `List your assigned projects and their tasks.`,
 }
 
 var listProjectsCmd = &cobra.Command{
