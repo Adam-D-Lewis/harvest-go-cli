@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"harvest-cli/internal/cache"
 )
 
 var listCmd = &cobra.Command{
@@ -40,6 +42,9 @@ func runListProjects(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to fetch projects: %w", err)
 	}
+
+	// Cache projects for shell completion
+	cache.SaveProjects(projects)
 
 	if len(projects) == 0 {
 		fmt.Println("No projects found.")

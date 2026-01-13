@@ -2,18 +2,66 @@ package cmd
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 
+	"harvest-cli/internal/cache"
 	"harvest-cli/internal/models"
 	"harvest-cli/internal/prompt"
 )
 
+// Note: getProjectsForCompletion is defined in start.go
+
 var logCmd = &cobra.Command{
-	Use:   "log",
+	Use:   "log [project] [task] [hours] [notes]",
 	Short: "Log a new time entry",
-	Long:  `Interactively log a new time entry by selecting project, task, hours, and notes.`,
-	RunE:  runLog,
+	Long: `Log a new time entry by selecting project, task, hours, and notes.
+
+Arguments are optional and support fuzzy matching:
+  harvest log                                   # Interactive selection
+  harvest log "myproject" "dev" 2.5             # Fuzzy match project/task
+  harvest log "myproject" "dev" 2.5 "Standup"   # With notes`,
+	RunE:              runLog,
+	ValidArgsFunction: completeLogArgs,
+}
+
+func completeLogArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	projects := getProjectsForCompletion()
+	if len(projects) == 0 {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+
+	switch len(args) {
+	case 0:
+		// Complete project names
+		var completions []string
+		for _, p := range projects {
+			completions = append(completions, p.Project.Name)
+		}
+		return completions, cobra.ShellCompDirectiveNoFileComp
+	case 1:
+		// Complete task names
+		projectQuery := args[0]
+		matches := prompt.FuzzyMatchProject(projects, projectQuery)
+		if len(matches) == 1 {
+			var completions []string
+			toCompleteLower := strings.ToLower(toComplete)
+			for _, t := range matches[0].TaskAssignments {
+				if t.IsActive {
+					// Filter by substring match (case-insensitive)
+					if toComplete == "" || strings.Contains(strings.ToLower(t.Task.Name), toCompleteLower) {
+						completions = append(completions, t.Task.Name)
+					}
+				}
+			}
+			return completions, cobra.ShellCompDirectiveNoFileComp
+		}
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	default:
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
 }
 
 func runLog(cmd *cobra.Command, args []string) error {
@@ -24,31 +72,115 @@ func runLog(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to fetch projects: %w", err)
 	}
 
-	// Select project
-	project, err := prompt.SelectProject(projects)
-	if err != nil {
-		return fmt.Errorf("project selection cancelled: %w", err)
+	// Cache projects for shell completion
+	cache.SaveProjects(projects)
+
+	var project *models.ProjectAssignment
+	var task *models.TaskAssignment
+	var hours float64
+	var notes string
+
+	// Parse arguments
+	projectQuery := ""
+	taskQuery := ""
+	hoursStr := ""
+	if len(args) >= 1 {
+		projectQuery = args[0]
+	}
+	if len(args) >= 2 {
+		taskQuery = args[1]
+	}
+	if len(args) >= 3 {
+		hoursStr = args[2]
+	}
+	if len(args) >= 4 {
+		notes = args[3]
 	}
 
-	// Select task
-	task, err := prompt.SelectTask(project.TaskAssignments)
-	if err != nil {
-		return fmt.Errorf("task selection cancelled: %w", err)
+	// Select/match project
+	if projectQuery != "" {
+		matches := prompt.FuzzyMatchProject(projects, projectQuery)
+		if len(matches) == 0 {
+			fmt.Printf("No project matching '%s', showing all projects...\n", projectQuery)
+			p, err := prompt.SelectProject(projects)
+			if err != nil {
+				return fmt.Errorf("project selection cancelled: %w", err)
+			}
+			project = p
+		} else if len(matches) == 1 {
+			project = &matches[0]
+			fmt.Printf("Matched project: %s\n", project.Project.Name)
+		} else {
+			fmt.Printf("Multiple projects match '%s', please select:\n", projectQuery)
+			p, err := prompt.SelectProject(matches)
+			if err != nil {
+				return fmt.Errorf("project selection cancelled: %w", err)
+			}
+			project = p
+		}
+	} else {
+		p, err := prompt.SelectProject(projects)
+		if err != nil {
+			return fmt.Errorf("project selection cancelled: %w", err)
+		}
+		project = p
 	}
 
-	// Input hours
-	hours, err := prompt.InputHours()
-	if err != nil {
-		return fmt.Errorf("hours input cancelled: %w", err)
+	// Select/match task
+	if taskQuery != "" {
+		matches := prompt.FuzzyMatchTask(project.TaskAssignments, taskQuery)
+		if len(matches) == 0 {
+			fmt.Printf("No task matching '%s', showing all tasks...\n", taskQuery)
+			t, err := prompt.SelectTask(project.TaskAssignments)
+			if err != nil {
+				return fmt.Errorf("task selection cancelled: %w", err)
+			}
+			task = t
+		} else if len(matches) == 1 {
+			task = &matches[0]
+			fmt.Printf("Matched task: %s\n", task.Task.Name)
+		} else {
+			fmt.Printf("Multiple tasks match '%s', please select:\n", taskQuery)
+			t, err := prompt.SelectTask(matches)
+			if err != nil {
+				return fmt.Errorf("task selection cancelled: %w", err)
+			}
+			task = t
+		}
+	} else {
+		t, err := prompt.SelectTask(project.TaskAssignments)
+		if err != nil {
+			return fmt.Errorf("task selection cancelled: %w", err)
+		}
+		task = t
 	}
 
-	// Input notes
-	notes, err := prompt.InputNotes()
-	if err != nil {
-		return fmt.Errorf("notes input cancelled: %w", err)
+	// Parse/input hours
+	if hoursStr != "" {
+		h, err := strconv.ParseFloat(hoursStr, 64)
+		if err != nil {
+			return fmt.Errorf("invalid hours value: %s", hoursStr)
+		}
+		hours = h
+		fmt.Printf("Hours: %.2f\n", hours)
+	} else {
+		h, err := prompt.InputHours()
+		if err != nil {
+			return fmt.Errorf("hours input cancelled: %w", err)
+		}
+		hours = h
 	}
 
-	// Input date
+	// Input notes if not provided
+	if notes == "" && len(args) < 4 {
+		n, err := prompt.InputNotes()
+		if err != nil {
+			return fmt.Errorf("notes input cancelled: %w", err)
+		}
+		notes = n
+	}
+
+	// Input date (always interactive for now)
 	date, err := prompt.InputDate()
 	if err != nil {
 		return fmt.Errorf("date input cancelled: %w", err)

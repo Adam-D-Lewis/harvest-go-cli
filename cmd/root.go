@@ -45,6 +45,23 @@ func Execute() {
 	}
 }
 
+// initAPIClient initializes the API client if not already initialized
+// Used by completion functions that run before PersistentPreRunE
+func initAPIClient() error {
+	if apiClient != nil {
+		return nil
+	}
+
+	var err error
+	cfg, err = config.Load()
+	if err != nil {
+		return err
+	}
+
+	apiClient = api.NewClient(cfg)
+	return nil
+}
+
 func init() {
 	rootCmd.AddCommand(logCmd)
 	rootCmd.AddCommand(listCmd)

@@ -216,3 +216,69 @@ func Confirm(message string) (bool, error) {
 
 	return strings.ToLower(result) == "y", nil
 }
+
+// FuzzyMatchProject finds projects matching the query string.
+// Returns matched projects. If exactly one match, returns it directly.
+// If multiple matches, caller should use SelectProject with filtered list.
+func FuzzyMatchProject(projects []models.ProjectAssignment, query string) []models.ProjectAssignment {
+	if query == "" {
+		return projects
+	}
+
+	query = strings.ToLower(query)
+	var matches []models.ProjectAssignment
+
+	// First, check for exact match
+	for _, p := range projects {
+		if strings.ToLower(p.Project.Name) == query {
+			return []models.ProjectAssignment{p}
+		}
+	}
+
+	// Then, check for substring matches
+	for _, p := range projects {
+		name := strings.ToLower(p.Project.Name)
+		client := strings.ToLower(p.Client.Name)
+		if strings.Contains(name, query) || strings.Contains(client, query) {
+			matches = append(matches, p)
+		}
+	}
+
+	return matches
+}
+
+// FuzzyMatchTask finds tasks matching the query string.
+// Returns matched tasks. Only considers active tasks.
+func FuzzyMatchTask(tasks []models.TaskAssignment, query string) []models.TaskAssignment {
+	// Filter to active tasks first
+	var activeTasks []models.TaskAssignment
+	for _, t := range tasks {
+		if t.IsActive {
+			activeTasks = append(activeTasks, t)
+		}
+	}
+
+	if query == "" {
+		return activeTasks
+	}
+
+	query = strings.ToLower(query)
+	var matches []models.TaskAssignment
+
+	// First, check for exact match
+	for _, t := range activeTasks {
+		if strings.ToLower(t.Task.Name) == query {
+			return []models.TaskAssignment{t}
+		}
+	}
+
+	// Then, check for substring matches
+	for _, t := range activeTasks {
+		name := strings.ToLower(t.Task.Name)
+		if strings.Contains(name, query) {
+			matches = append(matches, t)
+		}
+	}
+
+	return matches
+}
