@@ -53,7 +53,7 @@ func (c *Client) doRequest(method, path string, body interface{}) ([]byte, error
 	req.Header.Set("Authorization", "Bearer "+c.token)
 	req.Header.Set("Harvest-Account-Id", c.accountID)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "Harvest CLI (github.com/aktech/harvest-cli)")
+	req.Header.Set("User-Agent", "Harvest CLI")
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
