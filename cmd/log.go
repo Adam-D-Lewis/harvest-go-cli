@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -157,7 +156,7 @@ func runLog(cmd *cobra.Command, args []string) error {
 
 	// Parse/input hours
 	if hoursStr != "" {
-		h, err := strconv.ParseFloat(hoursStr, 64)
+		h, err := prompt.ParseHours(hoursStr)
 		if err != nil {
 			return fmt.Errorf("invalid hours value: %s", hoursStr)
 		}

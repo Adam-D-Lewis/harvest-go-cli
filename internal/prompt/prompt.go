@@ -100,7 +100,7 @@ func InputHours() (float64, error) {
 		}
 
 		// Support formats: "1.5", "1:30", "90m", "1h30m"
-		hours, err := parseHours(input)
+		hours, err := ParseHours(input)
 		if err != nil {
 			return err
 		}
@@ -125,10 +125,10 @@ func InputHours() (float64, error) {
 		return 0, err
 	}
 
-	return parseHours(result)
+	return ParseHours(result)
 }
 
-func parseHours(input string) (float64, error) {
+func ParseHours(input string) (float64, error) {
 	input = strings.TrimSpace(input)
 
 	// Try decimal format first (1.5)
