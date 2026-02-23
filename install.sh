@@ -2,7 +2,7 @@
 set -e
 
 REPO="aktech/harvest-go-cli"
-BINARY="harvest-cli"
+BINARY="harvest-go-cli"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 
 # Detect OS and architecture
