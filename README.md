@@ -5,8 +5,7 @@ A command-line tool for [Harvest](https://www.getharvest.com/) time tracking.
 ## Installation
 
 ```bash
-go build -o harvest
-sudo cp harvest /usr/local/bin/
+curl -sL https://raw.githubusercontent.com/aktech/harvest-go-cli/main/install.sh | sh
 ```
 
 ## Configuration

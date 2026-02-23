@@ -3,7 +3,7 @@ set -e
 
 REPO="aktech/harvest-go-cli"
 BINARY="harvest-cli"
-INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 
 # Detect OS and architecture
 OS="$(uname -s)"
@@ -41,6 +41,7 @@ curl -sL "$URL" -o "${TMPDIR}/${ARCHIVE}"
 echo "Extracting..."
 tar -xzf "${TMPDIR}/${ARCHIVE}" -C "$TMPDIR"
 
+mkdir -p "$INSTALL_DIR"
 echo "Installing to ${INSTALL_DIR}/harvest..."
 install -m 755 "${TMPDIR}/${BINARY}" "${INSTALL_DIR}/harvest"
 

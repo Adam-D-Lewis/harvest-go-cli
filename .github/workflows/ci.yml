@@ -38,5 +38,6 @@ jobs:
       - name: Test build and install
         run: |
           go build -o harvest-cli .
-          install -m 755 harvest-cli /usr/local/bin/harvest
-          harvest --help
+          mkdir -p "$HOME/.local/bin"
+          install -m 755 harvest-cli "$HOME/.local/bin/harvest"
+          "$HOME/.local/bin/harvest" --help
