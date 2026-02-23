@@ -37,7 +37,7 @@ func runStop(cmd *cobra.Command, args []string) error {
 	entry, err := apiClient.StopTimer(state.EntryID)
 	if err != nil {
 		// Clear local state
-		timer.ClearTimerState()
+		_ = timer.ClearTimerState()
 
 		// Check if timer was deleted externally (404)
 		if strings.Contains(err.Error(), "404") {

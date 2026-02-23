@@ -15,9 +15,8 @@ type Config struct {
 
 func Load() (*Config, error) {
 	// Try to load .env from current directory or parent directories
-	if err := loadEnvFile(); err != nil {
-		// .env file is optional if env vars are already set
-	}
+	// .env file is optional if env vars are already set
+	_ = loadEnvFile()
 
 	token := os.Getenv("HARVEST_TOKEN")
 	accountID := os.Getenv("HARVEST_ACCOUNT_ID")

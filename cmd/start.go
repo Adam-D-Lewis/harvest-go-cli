@@ -83,7 +83,7 @@ func getProjectsForCompletion() []models.ProjectAssignment {
 	}
 
 	// Update cache
-	cache.SaveProjects(projects)
+	_ = cache.SaveProjects(projects)
 	return projects
 }
 
@@ -111,7 +111,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 	}
 
 	// Cache projects for shell completion
-	cache.SaveProjects(projects)
+	_ = cache.SaveProjects(projects)
 
 	var project *models.ProjectAssignment
 	var task *models.TaskAssignment
