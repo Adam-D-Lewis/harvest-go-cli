@@ -46,7 +46,7 @@ func (d selectDelegate) Render(w io.Writer, m list.Model, index int, item list.I
 		}
 	}
 
-	fmt.Fprint(w, cursor+str)
+	_, _ = fmt.Fprint(w, cursor+str)
 }
 
 // selectModel is the bubbletea model for selection prompts.
@@ -156,4 +156,3 @@ func runSelect(label string, items []selectItem) (int, error) {
 
 	return result.choice, nil
 }
-
