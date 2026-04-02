@@ -1,4 +1,4 @@
-module harvest
+module github.com/Adam-D-Lewis/harvest-go-cli
 
 go 1.25.5
 

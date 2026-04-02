@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"harvest/internal/timer"
+	"github.com/Adam-D-Lewis/harvest-go-cli/internal/timer"
 )
 
 const defaultWeeklyTargetHours = 40.0

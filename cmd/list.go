@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"harvest/internal/cache"
+	"github.com/Adam-D-Lewis/harvest-go-cli/internal/cache"
 )
 
 var listCmd = &cobra.Command{
