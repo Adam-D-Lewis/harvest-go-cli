@@ -10,22 +10,56 @@ import (
 )
 
 var deleteDate string
+var deleteID int
 
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a time entry",
 	Long: `Delete an existing time entry. Shows today's entries by default.
 
-  harvest delete                    # Delete from today's entries
-  harvest delete --date 2026-03-27  # Delete from a specific day's entries`,
+  harvest delete                    # Interactive: select from today's entries
+  harvest delete --date 2026-03-27  # Interactive: select from a specific day
+  harvest delete --id 12345678      # Non-interactive: delete by entry ID`,
 	RunE: runDelete,
 }
 
 func init() {
 	deleteCmd.Flags().StringVar(&deleteDate, "date", "", "Date to show entries for (YYYY-MM-DD)")
+	deleteCmd.Flags().IntVar(&deleteID, "id", 0, "Time entry ID to delete (skips interactive selection)")
 }
 
 func runDelete(cmd *cobra.Command, args []string) error {
+	if deleteID != 0 {
+		return runDeleteNonInteractive()
+	}
+	return runDeleteInteractive()
+}
+
+func runDeleteNonInteractive() error {
+	fmt.Printf("Fetching entry %d...\n", deleteID)
+	entry, err := apiClient.GetTimeEntry(deleteID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch entry: %w", err)
+	}
+
+	if entry.IsLocked {
+		return fmt.Errorf("entry %d is locked/approved and cannot be deleted", deleteID)
+	}
+
+	fmt.Println("Deleting time entry...")
+	if err := apiClient.DeleteTimeEntry(deleteID); err != nil {
+		return fmt.Errorf("failed to delete entry: %w", err)
+	}
+
+	fmt.Printf("Deleted: %.2f hrs  %s / %s", entry.Hours, entry.Project.Name, entry.Task.Name)
+	if entry.Notes != "" {
+		fmt.Printf("  [%s]", entry.Notes)
+	}
+	fmt.Println()
+	return nil
+}
+
+func runDeleteInteractive() error {
 	// Determine date
 	date := time.Now().Format("2006-01-02")
 	if deleteDate != "" {
