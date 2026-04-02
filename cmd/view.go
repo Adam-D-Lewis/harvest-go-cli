@@ -140,7 +140,7 @@ func viewEntriesGroupedByDay(from, to string) error {
 				hoursStr += "*"
 			}
 
-			fmt.Printf("  %s hrs  %s / %s\n", hoursStr, e.Project.Name, e.Task.Name)
+			fmt.Printf("  [%d] %s hrs  %s / %s\n", e.ID, hoursStr, e.Project.Name, e.Task.Name)
 			if e.Notes != "" {
 				fmt.Printf("           %s\n", e.Notes)
 			}
@@ -167,7 +167,7 @@ func renderEntriesTable(entries []models.TimeEntry) {
 			hoursStr += "*"
 		}
 
-		fmt.Printf("%s  %s hrs  %s / %s\n", e.SpentDate, hoursStr, e.Project.Name, e.Task.Name)
+		fmt.Printf("[%d] %s  %s hrs  %s / %s\n", e.ID, e.SpentDate, hoursStr, e.Project.Name, e.Task.Name)
 		if e.Notes != "" {
 			fmt.Printf("                  %s\n", e.Notes)
 		}
