@@ -9,7 +9,7 @@ import (
 	"harvest/internal/timer"
 )
 
-const weeklyTargetHours = 36.0
+const defaultWeeklyTargetHours = 40.0
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
@@ -30,8 +30,14 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		weekday = 7
 	}
 	monday := now.AddDate(0, 0, -(weekday - 1))
+	friday := monday.AddDate(0, 0, 4)
 	from := monday.Format("2006-01-02")
-	to := now.Format("2006-01-02")
+	to := friday.Format("2006-01-02")
+
+	weeklyTargetHours := defaultWeeklyTargetHours
+	if capacity, err := apiClient.GetWeeklyCapacity(); err == nil && capacity > 0 {
+		weeklyTargetHours = capacity
+	}
 
 	entries, err := apiClient.GetTimeEntries(from, to)
 	if err != nil {

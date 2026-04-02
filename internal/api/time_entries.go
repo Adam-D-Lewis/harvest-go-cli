@@ -114,6 +114,23 @@ func (c *Client) DeleteTimeEntry(entryID int) error {
 	return err
 }
 
+// GetWeeklyCapacity returns the current user's weekly capacity in hours.
+func (c *Client) GetWeeklyCapacity() (float64, error) {
+	body, err := c.doRequest("GET", "/users/me", nil)
+	if err != nil {
+		return 0, err
+	}
+
+	var resp struct {
+		WeeklyCapacity int `json:"weekly_capacity"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return 0, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return float64(resp.WeeklyCapacity) / 3600.0, nil
+}
+
 // GetCompanyBaseURI returns the company's Harvest base URI (e.g. "https://openteams.harvestapp.com").
 func (c *Client) GetCompanyBaseURI() (string, error) {
 	body, err := c.doRequest("GET", "/company", nil)
