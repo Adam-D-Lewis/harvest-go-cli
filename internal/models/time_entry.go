@@ -8,6 +8,7 @@ type TimeEntry struct {
 	Hours     float64   `json:"hours"`
 	Notes     string    `json:"notes"`
 	IsRunning bool      `json:"is_running"`
+	IsLocked  bool      `json:"is_locked"`
 	Project   Project   `json:"project"`
 	Task      Task      `json:"task"`
 	Client    Client    `json:"client"`
@@ -29,4 +30,12 @@ type CreateTimeEntryRequest struct {
 	SpentDate string  `json:"spent_date"`
 	Hours     float64 `json:"hours,omitempty"`
 	Notes     string  `json:"notes,omitempty"`
+}
+
+type UpdateTimeEntryRequest struct {
+	ProjectID *int     `json:"project_id,omitempty"`
+	TaskID    *int     `json:"task_id,omitempty"`
+	SpentDate *string  `json:"spent_date,omitempty"`
+	Hours     *float64 `json:"hours,omitempty"`
+	Notes     *string  `json:"notes,omitempty"`
 }
