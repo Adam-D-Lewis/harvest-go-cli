@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"harvest-cli/internal/prompt"
+	"harvest/internal/prompt"
 )
 
 var deleteDate string

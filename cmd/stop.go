@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"harvest-cli/internal/timer"
+	"harvest/internal/timer"
 )
 
 var stopCmd = &cobra.Command{

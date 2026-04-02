@@ -7,10 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"harvest-cli/internal/cache"
-	"harvest-cli/internal/models"
-	"harvest-cli/internal/prompt"
-	"harvest-cli/internal/timer"
+	"harvest/internal/cache"
+	"harvest/internal/models"
+	"harvest/internal/prompt"
+	"harvest/internal/timer"
 )
 
 var startCmd = &cobra.Command{

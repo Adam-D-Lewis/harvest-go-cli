@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"harvest-cli/internal/timer"
+	"harvest/internal/timer"
 )
 
 const weeklyTargetHours = 36.0

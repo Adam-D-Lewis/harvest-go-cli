@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"harvest-cli/internal/models"
+	"harvest/internal/models"
 )
 
 func (c *Client) GetProjectAssignments() ([]models.ProjectAssignment, error) {

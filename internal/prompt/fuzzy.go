@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"harvest-cli/internal/models"
+	"harvest/internal/models"
 )
 
 // ParseHours parses various hour input formats into a float64.

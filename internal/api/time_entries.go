@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"harvest-cli/internal/models"
+	"harvest/internal/models"
 )
 
 func (c *Client) GetTimeEntries(from, to string) ([]models.TimeEntry, error) {

@@ -1,6 +1,6 @@
 package main
 
-import "harvest-cli/cmd"
+import "harvest/cmd"
 
 func main() {
 	cmd.Execute()

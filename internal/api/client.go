@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"harvest-cli/internal/config"
+	"harvest/internal/config"
 )
 
 const baseURL = "https://api.harvestapp.com/v2"

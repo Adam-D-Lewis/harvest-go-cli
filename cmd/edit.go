@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"harvest-cli/internal/cache"
-	"harvest-cli/internal/models"
-	"harvest-cli/internal/prompt"
+	"harvest/internal/cache"
+	"harvest/internal/models"
+	"harvest/internal/prompt"
 )
 
 var editDate string

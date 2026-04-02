@@ -1,4 +1,4 @@
-module harvest-cli
+module harvest
 
 go 1.25.5
 

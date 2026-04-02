@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"harvest-cli/internal/models"
+	"harvest/internal/models"
 )
 
 const cacheMaxAge = 1 * time.Hour

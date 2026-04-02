@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"harvest-cli/internal/models"
+	"harvest/internal/models"
 )
 
 func SelectProject(projects []models.ProjectAssignment) (*models.ProjectAssignment, error) {

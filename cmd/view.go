@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"harvest-cli/internal/models"
+	"harvest/internal/models"
 )
 
 var viewCmd = &cobra.Command{
