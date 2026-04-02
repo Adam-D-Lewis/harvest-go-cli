@@ -7,6 +7,7 @@ type TimeEntry struct {
 	SpentDate string    `json:"spent_date"`
 	Hours     float64   `json:"hours"`
 	Notes     string    `json:"notes"`
+	Billable     bool   `json:"billable"`
 	IsRunning    bool   `json:"is_running"`
 	IsLocked     bool   `json:"is_locked"`
 	LockedReason string `json:"locked_reason"`

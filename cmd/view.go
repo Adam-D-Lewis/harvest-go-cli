@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"hash/fnv"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -61,8 +63,9 @@ var viewMonthCmd = &cobra.Command{
 }
 
 var (
-	fromDate string
-	toDate   string
+	fromDate   string
+	toDate     string
+	jsonOutput bool
 )
 
 func init() {
@@ -72,22 +75,51 @@ func init() {
 
 	viewCmd.Flags().StringVar(&fromDate, "from", "", "Start date (YYYY-MM-DD)")
 	viewCmd.Flags().StringVar(&toDate, "to", "", "End date (YYYY-MM-DD)")
+	viewCmd.Flags().BoolVar(&jsonOutput, "json", false, "Output as JSON")
+	viewTodayCmd.Flags().BoolVar(&jsonOutput, "json", false, "Output as JSON")
 	viewCmd.RunE = runViewRange
+}
+
+// renderJSON outputs entries as formatted JSON and exits.
+func renderJSON(entries []models.TimeEntry) error {
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	return enc.Encode(entries)
+}
+
+// parseWeekMonthArgs parses args for week/month subcommands, extracting
+// an optional numeric offset and a --json flag.
+func parseWeekMonthArgs(args []string) (offset int, wantJSON bool, err error) {
+	for _, a := range args {
+		if a == "--json" {
+			wantJSON = true
+			continue
+		}
+		n, e := strconv.Atoi(a)
+		if e != nil {
+			return 0, false, fmt.Errorf("unexpected argument %q", a)
+		}
+		offset = n
+	}
+	return offset, wantJSON, nil
 }
 
 func runViewToday(cmd *cobra.Command, args []string) error {
 	today := time.Now().Format("2006-01-02")
+	if jsonOutput {
+		entries, err := apiClient.GetTimeEntries(today, today)
+		if err != nil {
+			return err
+		}
+		return renderJSON(entries)
+	}
 	return viewEntries(today, today, "Today")
 }
 
 func runViewWeek(cmd *cobra.Command, args []string) error {
-	offset := 0
-	if len(args) > 0 {
-		n, err := strconv.Atoi(args[0])
-		if err != nil {
-			return fmt.Errorf("invalid week offset %q — use a number like -1, -2", args[0])
-		}
-		offset = n
+	offset, wantJSON, err := parseWeekMonthArgs(args)
+	if err != nil {
+		return err
 	}
 
 	now := time.Now()
@@ -130,17 +162,16 @@ func runViewWeek(cmd *cobra.Command, args []string) error {
 		entries = filtered
 	}
 
+	if wantJSON {
+		return renderJSON(entries)
+	}
 	return renderGroupedFromEntries(entries)
 }
 
 func runViewMonth(cmd *cobra.Command, args []string) error {
-	offset := 0
-	if len(args) > 0 {
-		n, err := strconv.Atoi(args[0])
-		if err != nil {
-			return fmt.Errorf("invalid month offset %q — use a number like -1, -2", args[0])
-		}
-		offset = n
+	offset, wantJSON, err := parseWeekMonthArgs(args)
+	if err != nil {
+		return err
 	}
 
 	now := time.Now()
@@ -150,8 +181,16 @@ func runViewMonth(cmd *cobra.Command, args []string) error {
 
 	from := firstOfMonth.Format("2006-01-02")
 	to := lastOfMonth.Format("2006-01-02")
-	label := firstOfMonth.Format("January 2006")
 
+	if wantJSON {
+		entries, err := apiClient.GetTimeEntries(from, to)
+		if err != nil {
+			return err
+		}
+		return renderJSON(entries)
+	}
+
+	label := firstOfMonth.Format("January 2006")
 	return viewEntriesByWeek(from, to, label)
 }
 
@@ -225,6 +264,13 @@ func runViewRange(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid --to: %w", err)
 	}
 
+	if jsonOutput {
+		entries, err := apiClient.GetTimeEntries(from, to)
+		if err != nil {
+			return err
+		}
+		return renderJSON(entries)
+	}
 	return viewEntries(from, to, fmt.Sprintf("%s to %s", from, to))
 }
 
@@ -241,7 +287,7 @@ func viewEntries(from, to, label string) error {
 		return nil
 	}
 
-	renderGrouped(entries)
+	renderGrouped(entries, true)
 	return nil
 }
 
@@ -251,7 +297,7 @@ func renderGroupedFromEntries(entries []models.TimeEntry) error {
 		return nil
 	}
 
-	renderGrouped(entries)
+	renderGrouped(entries, false)
 	return nil
 }
 
@@ -267,7 +313,7 @@ func formatHours(hours float64, running bool) string {
 }
 
 // renderGrouped displays time entries grouped by day with daily subtotals and a grand total.
-func renderGrouped(entries []models.TimeEntry) {
+func renderGrouped(entries []models.TimeEntry, showIDs bool) {
 	// Group by date
 	byDate := make(map[string][]models.TimeEntry)
 	for _, e := range entries {
@@ -282,6 +328,12 @@ func renderGrouped(entries []models.TimeEntry) {
 	sort.Strings(dates)
 
 	var grandTotal float64
+	var billableTotal float64
+	for _, e := range entries {
+		if e.Billable {
+			billableTotal += e.Hours
+		}
+	}
 	const lineWidth = 66
 
 	for i, date := range dates {
@@ -328,7 +380,15 @@ func renderGrouped(entries []models.TimeEntry) {
 			if padding < 1 {
 				padding = 1
 			}
-			fmt.Printf("  %s hrs  %s%s%s%*s[%d]%s\n", hoursStr, color, projectTask, colorReset, padding, "", e.ID, lockedStr)
+			billableStr := " "
+			if e.Billable {
+				billableStr = "$"
+			}
+			if showIDs {
+				fmt.Printf("  %s hrs %s %s%s%s%*s[%d]%s\n", hoursStr, billableStr, color, projectTask, colorReset, padding, "", e.ID, lockedStr)
+			} else {
+				fmt.Printf("  %s hrs %s %s%s%s%s\n", hoursStr, billableStr, color, projectTask, colorReset, lockedStr)
+			}
 			if e.Notes != "" {
 				fmt.Printf("          📝 %s\n", e.Notes)
 			}
@@ -342,13 +402,69 @@ func renderGrouped(entries []models.TimeEntry) {
 		}
 	}
 
-	// Grand total
-	divider := ""
-	for j := 0; j < lineWidth; j++ {
-		divider += "─"
+	// Summary header
+	fmt.Printf("\n══ Summary %s══\n", strings.Repeat("═", lineWidth-14))
+
+	// Project/task breakdown tree
+	type projectTaskKey struct {
+		project string
+		task    string
 	}
-	fmt.Printf("\n%s\n", divider)
+	projectTotals := make(map[string]float64)
+	taskTotals := make(map[projectTaskKey]float64)
+	for _, e := range entries {
+		projectTotals[e.Project.Name] += e.Hours
+		taskTotals[projectTaskKey{e.Project.Name, e.Task.Name}] += e.Hours
+	}
+
+	// Sort projects by hours descending
+	type projectHours struct {
+		name  string
+		hours float64
+	}
+	var projects []projectHours
+	for name, hours := range projectTotals {
+		projects = append(projects, projectHours{name, hours})
+	}
+	sort.Slice(projects, func(a, b int) bool {
+		return projects[a].hours > projects[b].hours
+	})
+
+	fmt.Println()
+	for _, p := range projects {
+		color := colorForProject(p.name)
+		fmt.Printf("  %5.2f hrs  %s%s%s\n", p.hours, color, p.name, colorReset)
+
+		// Collect tasks for this project
+		type taskHours struct {
+			name  string
+			hours float64
+		}
+		var tasks []taskHours
+		for ptk, h := range taskTotals {
+			if ptk.project == p.name {
+				tasks = append(tasks, taskHours{ptk.task, h})
+			}
+		}
+		sort.Slice(tasks, func(a, b int) bool {
+			return tasks[a].hours > tasks[b].hours
+		})
+
+		for i, t := range tasks {
+			branch := "├─"
+			if i == len(tasks)-1 {
+				branch = "└─"
+			}
+			fmt.Printf("            %s%s %5.2f  %s%s\n", color, branch, t.hours, t.name, colorReset)
+		}
+	}
+
+	// Grand total
+	nonBillable := grandTotal - billableTotal
+	fmt.Println()
 	fmt.Printf("  Total: %.2f hrs (%d entries)\n", grandTotal, len(entries))
+	fmt.Printf("    Billable:      %5.2f hrs\n", billableTotal)
+	fmt.Printf("    Non-billable:  %5.2f hrs\n", nonBillable)
 }
 
 // mondayOf returns the Monday of the week containing the given date.
@@ -467,12 +583,69 @@ func viewEntriesByWeek(from, to, label string) error {
 		}
 	}
 
-	divider := ""
-	for j := 0; j < lineWidth; j++ {
-		divider += "─"
+	// Project/task breakdown tree for the whole period
+	type ptKey struct {
+		project string
+		task    string
 	}
-	fmt.Printf("\n%s\n", divider)
+	projectTotals := make(map[string]float64)
+	taskTotals := make(map[ptKey]float64)
+	var billableTotal float64
+	for _, e := range entries {
+		projectTotals[e.Project.Name] += e.Hours
+		taskTotals[ptKey{e.Project.Name, e.Task.Name}] += e.Hours
+		if e.Billable {
+			billableTotal += e.Hours
+		}
+	}
+
+	type projHours struct {
+		name  string
+		hours float64
+	}
+	var projects []projHours
+	for name, hours := range projectTotals {
+		projects = append(projects, projHours{name, hours})
+	}
+	sort.Slice(projects, func(a, b int) bool {
+		return projects[a].hours > projects[b].hours
+	})
+
+	// Summary header
+	fmt.Printf("\n══ Summary %s══\n", strings.Repeat("═", lineWidth-14))
+
+	for _, p := range projects {
+		color := colorForProject(p.name)
+		fmt.Printf("  %5.2f hrs  %s%s%s\n", p.hours, color, p.name, colorReset)
+
+		type tHours struct {
+			name  string
+			hours float64
+		}
+		var tasks []tHours
+		for k, h := range taskTotals {
+			if k.project == p.name {
+				tasks = append(tasks, tHours{k.task, h})
+			}
+		}
+		sort.Slice(tasks, func(a, b int) bool {
+			return tasks[a].hours > tasks[b].hours
+		})
+
+		for i, t := range tasks {
+			branch := "├─"
+			if i == len(tasks)-1 {
+				branch = "└─"
+			}
+			fmt.Printf("            %s%s %5.2f  %s%s\n", color, branch, t.hours, t.name, colorReset)
+		}
+	}
+
+	nonBillable := grandTotal - billableTotal
+	fmt.Println()
 	fmt.Printf("  Total: %.2f hrs\n", grandTotal)
+	fmt.Printf("    Billable:      %5.2f hrs\n", billableTotal)
+	fmt.Printf("    Non-billable:  %5.2f hrs\n", nonBillable)
 
 	return nil
 }

@@ -70,4 +70,5 @@ func init() {
 	rootCmd.AddCommand(stopCmd)
 	rootCmd.AddCommand(editCmd)
 	rootCmd.AddCommand(deleteCmd)
+	rootCmd.AddCommand(submitCmd)
 }

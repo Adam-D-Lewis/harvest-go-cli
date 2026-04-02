@@ -113,3 +113,20 @@ func (c *Client) DeleteTimeEntry(entryID int) error {
 	_, err := c.doRequest("DELETE", path, nil)
 	return err
 }
+
+// GetCompanyBaseURI returns the company's Harvest base URI (e.g. "https://openteams.harvestapp.com").
+func (c *Client) GetCompanyBaseURI() (string, error) {
+	body, err := c.doRequest("GET", "/company", nil)
+	if err != nil {
+		return "", err
+	}
+
+	var resp struct {
+		BaseURI string `json:"base_uri"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return "", fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return resp.BaseURI, nil
+}
