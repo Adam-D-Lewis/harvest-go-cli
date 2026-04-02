@@ -78,6 +78,21 @@ func (c *Client) RestartTimer(entryID int) (*models.TimeEntry, error) {
 	return &entry, nil
 }
 
+func (c *Client) GetTimeEntry(entryID int) (*models.TimeEntry, error) {
+	path := fmt.Sprintf("/time_entries/%d", entryID)
+	body, err := c.doRequest("GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var entry models.TimeEntry
+	if err := json.Unmarshal(body, &entry); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return &entry, nil
+}
+
 func (c *Client) UpdateTimeEntry(entryID int, req *models.UpdateTimeEntryRequest) (*models.TimeEntry, error) {
 	path := fmt.Sprintf("/time_entries/%d", entryID)
 	body, err := c.doRequest("PATCH", path, req)
