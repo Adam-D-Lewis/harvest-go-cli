@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -12,6 +13,8 @@ import (
 )
 
 // Note: getProjectsForCompletion is defined in start.go
+
+var logDate string
 
 var logCmd = &cobra.Command{
 	Use:   "log [project] [task] [hours] [notes]",
@@ -24,6 +27,10 @@ Arguments are optional and support fuzzy matching:
   harvest log "myproject" "dev" 2.5 "Standup"   # With notes`,
 	RunE:              runLog,
 	ValidArgsFunction: completeLogArgs,
+}
+
+func init() {
+	logCmd.Flags().StringVar(&logDate, "date", "", "Date for the entry (YYYY-MM-DD), defaults to interactive prompt")
 }
 
 func completeLogArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
@@ -179,10 +186,19 @@ func runLog(cmd *cobra.Command, args []string) error {
 		notes = n
 	}
 
-	// Input date (always interactive for now)
-	date, err := prompt.InputDate()
-	if err != nil {
-		return fmt.Errorf("date input cancelled: %w", err)
+	var date string
+	if logDate != "" {
+		if _, err := time.Parse("2006-01-02", logDate); err != nil {
+			return fmt.Errorf("invalid date format. Use YYYY-MM-DD")
+		}
+		date = logDate
+		fmt.Printf("Date: %s\n", date)
+	} else {
+		d, err := prompt.InputDate()
+		if err != nil {
+			return fmt.Errorf("date input cancelled: %w", err)
+		}
+		date = d
 	}
 
 	// Create time entry
