@@ -7,8 +7,9 @@ type TimeEntry struct {
 	SpentDate string    `json:"spent_date"`
 	Hours     float64   `json:"hours"`
 	Notes     string    `json:"notes"`
-	IsRunning bool      `json:"is_running"`
-	IsLocked  bool      `json:"is_locked"`
+	IsRunning    bool   `json:"is_running"`
+	IsLocked     bool   `json:"is_locked"`
+	LockedReason string `json:"locked_reason"`
 	Project   Project   `json:"project"`
 	Task      Task      `json:"task"`
 	Client    Client    `json:"client"`
