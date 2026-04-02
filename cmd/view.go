@@ -29,11 +29,51 @@ var projectColors = []string{
 
 const colorReset = "\033[0m"
 
-// colorForProject returns a consistent ANSI color for a given project name.
-func colorForProject(name string) string {
+// projectColorAssigner assigns colors to projects, avoiding duplicates until
+// all colors in the palette have been used.
+type projectColorAssigner struct {
+	assigned map[string]string
+	used     map[int]bool
+}
+
+func newProjectColorAssigner() *projectColorAssigner {
+	return &projectColorAssigner{
+		assigned: make(map[string]string),
+		used:     make(map[int]bool),
+	}
+}
+
+func (a *projectColorAssigner) colorFor(name string) string {
+	if c, ok := a.assigned[name]; ok {
+		return c
+	}
+
+	// Reset used set when all colors are taken.
+	if len(a.used) >= len(projectColors) {
+		a.used = make(map[int]bool)
+	}
+
+	// Start from the hash-preferred index, skip already-used slots.
 	h := fnv.New32a()
 	h.Write([]byte(name))
-	return projectColors[int(h.Sum32())%len(projectColors)]
+	preferred := int(h.Sum32()) % len(projectColors)
+	idx := preferred
+	for a.used[idx] {
+		idx = (idx + 1) % len(projectColors)
+	}
+
+	a.used[idx] = true
+	a.assigned[name] = projectColors[idx]
+	return projectColors[idx]
+}
+
+// Global assigner so colors stay consistent across all view calls in a single run.
+var projColors = newProjectColorAssigner()
+
+// colorForProject returns a consistent ANSI color for a given project name,
+// avoiding duplicate colors until all palette entries have been used.
+func colorForProject(name string) string {
+	return projColors.colorFor(name)
 }
 
 var viewCmd = &cobra.Command{
