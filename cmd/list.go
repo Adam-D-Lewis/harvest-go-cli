@@ -81,10 +81,33 @@ func runListTasks(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("project ID is required. Use --project or -p flag")
 	}
 
-	fmt.Println("Fetching projects...")
+	if !jsonOutput {
+		fmt.Println("Fetching projects...")
+	}
+
 	projects, err := apiClient.GetProjectAssignments()
 	if err != nil {
 		return fmt.Errorf("failed to fetch projects: %w", err)
+	}
+
+	if jsonOutput {
+		var tasks []models.TaskAssignment
+		var found bool
+		for _, p := range projects {
+			if p.Project.ID == projectID {
+				found = true
+				for _, t := range p.TaskAssignments {
+					if t.IsActive {
+						tasks = append(tasks, t)
+					}
+				}
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("project with ID %d not found", projectID)
+		}
+		return renderTasksJSON(tasks)
 	}
 
 	var projectName string
@@ -151,4 +174,10 @@ func renderProjectsJSON(projects []models.ProjectAssignment) error {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	return enc.Encode(projects)
+}
+
+func renderTasksJSON(tasks []models.TaskAssignment) error {
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	return enc.Encode(tasks)
 }
