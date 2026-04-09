@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/Adam-D-Lewis/harvest-go-cli/internal/cache"
+	"github.com/Adam-D-Lewis/harvest-go-cli/internal/models"
 )
 
 var listCmd = &cobra.Command{
@@ -34,10 +37,15 @@ func init() {
 	listCmd.AddCommand(listProjectsCmd)
 	listCmd.AddCommand(listTasksCmd)
 	listTasksCmd.Flags().IntVarP(&projectID, "project", "p", 0, "Project ID")
+	listProjectsCmd.Flags().BoolVar(&jsonOutput, "json", false, "Output as JSON")
+	listTasksCmd.Flags().BoolVar(&jsonOutput, "json", false, "Output as JSON")
 }
 
 func runListProjects(cmd *cobra.Command, args []string) error {
-	fmt.Println("Fetching projects...")
+	if !jsonOutput {
+		fmt.Println("Fetching projects...")
+	}
+
 	projects, err := apiClient.GetProjectAssignments()
 	if err != nil {
 		return fmt.Errorf("failed to fetch projects: %w", err)
@@ -45,6 +53,10 @@ func runListProjects(cmd *cobra.Command, args []string) error {
 
 	// Cache projects for shell completion
 	_ = cache.SaveProjects(projects)
+
+	if jsonOutput {
+		return renderProjectsJSON(projects)
+	}
 
 	if len(projects) == 0 {
 		fmt.Println("No projects found.")
@@ -133,4 +145,10 @@ func truncate(s string, maxLen int) string {
 		return s
 	}
 	return s[:maxLen-3] + "..."
+}
+
+func renderProjectsJSON(projects []models.ProjectAssignment) error {
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	return enc.Encode(projects)
 }
