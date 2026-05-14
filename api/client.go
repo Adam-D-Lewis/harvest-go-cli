@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/Adam-D-Lewis/harvest-go-cli/internal/config"
+	"github.com/Adam-D-Lewis/harvest-go-cli/config"
 )
 
 const baseURL = "https://api.harvestapp.com/v2"

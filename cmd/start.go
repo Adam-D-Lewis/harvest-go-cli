@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Adam-D-Lewis/harvest-go-cli/internal/cache"
-	"github.com/Adam-D-Lewis/harvest-go-cli/internal/models"
+	"github.com/Adam-D-Lewis/harvest-go-cli/models"
 	"github.com/Adam-D-Lewis/harvest-go-cli/internal/prompt"
 	"github.com/Adam-D-Lewis/harvest-go-cli/internal/timer"
 )

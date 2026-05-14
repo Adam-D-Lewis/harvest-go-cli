@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Adam-D-Lewis/harvest-go-cli/internal/models"
+	"github.com/Adam-D-Lewis/harvest-go-cli/models"
 )
 
 const cacheMaxAge = 1 * time.Hour

@@ -12,7 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Adam-D-Lewis/harvest-go-cli/internal/models"
+	"github.com/Adam-D-Lewis/harvest-go-cli/models"
 )
 
 // ANSI color codes — high-contrast colors readable on dark backgrounds.

@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Adam-D-Lewis/harvest-go-cli/internal/api"
-	"github.com/Adam-D-Lewis/harvest-go-cli/internal/config"
+	"github.com/Adam-D-Lewis/harvest-go-cli/api"
+	"github.com/Adam-D-Lewis/harvest-go-cli/config"
 )
 
 var (
